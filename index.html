@@ -2,7 +2,7 @@
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AuthDiff · Authorization review</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f4f3fb;color:#252142;font:16px system-ui}main{max-width:1080px;margin:auto;padding:40px 24px}header{border-top:6px solid #6851b6;padding-top:20px}h1{font-size:clamp(2rem,6vw,4rem);letter-spacing:-.05em;margin:10px 0}small{color:#54418e;font-weight:700;letter-spacing:.15em}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}label{font-weight:600}textarea{width:100%;height:250px;margin-top:8px;padding:12px;border:1px solid #a39abb;border-radius:8px;font:13px monospace}button{background:#483380;color:white;border:0;border-radius:6px;padding:12px 18px;margin-right:8px;cursor:pointer}article{background:white;border-left:4px solid #6851b6;padding:16px;margin-top:12px}pre{white-space:pre-wrap;overflow-wrap:anywhere}@media(max-width:650px){.inputs{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:#f4f3fb;color:#252142;font:16px system-ui}main{max-width:1080px;margin:auto;padding:40px 24px}header{border-top:6px solid #6851b6;padding-top:20px}h1{font-size:clamp(2rem,6vw,4rem);letter-spacing:-.05em;margin:10px 0}small{color:#54418e;font-weight:700;letter-spacing:.15em}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0}label{font-weight:600}textarea{width:100%;height:250px;margin-top:8px;padding:12px;border:1px solid #a39abb;border-radius:8px;font:13px monospace}button{background:#483380;color:white;border:0;border-radius:6px;padding:12px 18px;margin-right:8px;cursor:pointer}article{background:white;border-left:4px solid #6851b6;padding:16px;margin-top:12px}.values{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}.values p{margin:0;background:#f4f3fb;padding:12px;overflow-wrap:anywhere}.values b{display:block;font-size:.8rem;margin-bottom:4px}pre{white-space:pre-wrap;overflow-wrap:anywhere}@media(max-width:650px){.inputs{grid-template-columns:1fr}}
 </style>
 <main><header><small>AUTHDIFF / REVIEW WORKBENCH</small><h1>Inspect the authorization delta</h1><p>Compare two ordered Soroban invocation trees. Review who authorizes each call and what arguments changed.</p></header>
 <div class="inputs"><label>Baseline<textarea id="baseline" spellcheck="false"></textarea></label><label>Candidate<textarea id="candidate" spellcheck="false"></textarea></label></div>
@@ -33,7 +33,25 @@ el('compare').onclick = async () => {
       title.textContent = change.kind + ' · ' + change.path.join(' / ');
       const detail = document.createElement('pre');
       detail.textContent = JSON.stringify({before:change.before ?? null,after:change.after ?? null},null,2);
-      card.append(title,detail);
+      card.append(title);
+      if (change.kind === 'argument-changed') {
+        const values = document.createElement('div');
+        values.className = 'values';
+        for (const [label, value] of [['Baseline', change.before], ['Candidate', change.after]]) {
+          const panel = document.createElement('p');
+          const heading = document.createElement('b');
+          heading.textContent = label;
+          panel.append(heading, document.createTextNode(value?.decimal ?? value?.xdr ?? 'Absent'));
+          values.append(panel);
+        }
+        const raw = document.createElement('details');
+        const summary = document.createElement('summary');
+        summary.textContent = 'Inspect argument XDR';
+        raw.append(summary, detail);
+        card.append(values, raw);
+      } else {
+        card.append(detail);
+      }
       el('results').append(card);
     }
   } catch (error) { el('status').textContent = error.message; }
