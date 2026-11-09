@@ -1,0 +1,14 @@
+{
+  "name": "@authdiff/frontend",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Review baseline and candidate Soroban authorization side by side",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}
