@@ -6,22 +6,26 @@
 </style>
 <main><header><small>AUTHDIFF / REVIEW WORKBENCH</small><h1>Inspect the authorization delta</h1><p>Compare two ordered Soroban invocation trees. Review who authorizes each call and what arguments changed.</p></header>
 <div class="inputs"><label>Baseline<textarea id="baseline" spellcheck="false"></textarea></label><label>Candidate<textarea id="candidate" spellcheck="false"></textarea></label></div>
-<button id="sample">Load example</button><button id="compare">Compare trees</button><p id="status" role="status"></p><section id="results" aria-label="Changes"></section>
+<label for="format">Input format</label> <select id="format"><option value="normalized">Normalized tree</option><option value="xdr">Authorization entry XDR</option></select>
+<button id="sample">Load example</button><button id="testnet">Load testnet capture</button><button id="compare">Compare trees</button><p id="status" role="status"></p><section id="results" aria-label="Changes"></section>
 </main><script>
 const el = id => document.getElementById(id);
-el('sample').onclick = async () => {
+async function loadExample(path, format) {
   try {
-    const response = await fetch('/example');
+    const response = await fetch(path);
     if (!response.ok) throw Error('Example unavailable');
     const {before,after} = await response.json();
+    el('format').value = format;
     el('baseline').value = JSON.stringify(before,null,2);
     el('candidate').value = JSON.stringify(after,null,2);
   } catch (error) { el('status').textContent = error.message; }
-};
+}
+el('sample').onclick = () => loadExample('/example', 'normalized');
+el('testnet').onclick = () => loadExample('/testnet-example', 'xdr');
 el('compare').onclick = async () => {
   el('results').replaceChildren();
   try {
-    const response = await fetch('/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+    const response = await fetch(el('format').value === 'xdr' ? '/compare-xdr' : '/compare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       before:JSON.parse(el('baseline').value),after:JSON.parse(el('candidate').value)
     })});
     const result = await response.json();
